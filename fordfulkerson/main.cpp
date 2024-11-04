@@ -3,38 +3,38 @@
 #include <queue>
 #include <vector>
 #include <string.h>
+
 using namespace std;
 
 #define V 6 // Número de vértices no gráfico
 
-/* Função auxiliar que retorna verdadeiro se houver um caminho da origem 's' 
-para o sumidouro 't' na rede residual. Também preenche parent[] para armazenar o caminho */
-bool bfs(int rGraph[V][V], int s, int t, int parent[]) {
+// Função auxiliar que retorna verdadeiro se houver um caminho da origem 's' para o sumidouro 't' na rede residual. Também preenche pai[] para armazenar o caminho
+bool bfs(int grafoRes[V][V], int s, int t, int pai[]) {
     // Cria um array visitado e marca todos os vértices como não visitados
-    bool visited[V];
-    memset(visited, 0, sizeof(visited));
+    bool visitado[V];
+    memset(visitado, 0, sizeof(visitado));
 
     // Cria uma fila, insere o nó de origem e marca-o como visitado
     queue<int> q;
     q.push(s);
-    visited[s] = true;
-    parent[s] = -1;
+    visitado[s] = true;
+    pai[s] = -1;
 
-    // Standard BFS Loop
+    //Loop BFS Padrão
     while (!q.empty()) {
         int u = q.front();
         q.pop();
 
         for (int v = 0; v < V; v++) {
-            if (visited[v] == false && rGraph[u][v] > 0) {
+            if (visitado[v] == false && grafoRes[u][v] > 0) {
                 // Se encontramos um caminho para o sumidouro, podemos retornar verdadeiro
                 if (v == t) {
-                    parent[v] = u;
+                    pai[v] = u;
                     return true;
                 }
                 q.push(v);
-                parent[v] = u;
-                visited[v] = true;
+                pai[v] = u;
+                visitado[v] = true;
             }
         }
     }
@@ -44,51 +44,49 @@ bool bfs(int rGraph[V][V], int s, int t, int parent[]) {
 }
 
 // Retorna o fluxo máximo de s para t no gráfico dado
-int fordFulkerson(int graph[V][V], int s, int t) {
+int fordFulkerson(int grafo[V][V], int s, int t) {
     int u, v;
 
-    // Cria um gráfico residual e preenche o gráfico residual com capacidades
-    // dadas no gráfico original, pois no gráfico residual rGraph[i][j] indica a capacidade
-    // residual do aresta de i para j (se houver um aresta)
-    int rGraph[V][V]; // Gráfico residual onde rGraph[i][j] indica capacidade residual do aresta de i para j
+    // Cria um gráfico residual e preenche o gráfico residual com capacidades dadas no gráfico original, pois no gráfico residual grafoRes[i][j] indica a capacidade residual do aresta de i para j (se houver um aresta)
+    int grafoRes[V][V]; // Gráfico residual onde grafoRes[i][j] indica capacidade residual do aresta de i para j
     for (u = 0; u < V; u++) {
         for (v = 0; v < V; v++) {
-            rGraph[u][v] = graph[u][v];
+            grafoRes[u][v] = grafo[u][v];
         }
     }
 
-    int parent[V]; // Array para armazenar o caminho
+    int pai[V]; // Array para armazenar o caminho
 
-    int max_flow = 0; // Não há fluxo inicialmente
+    int fTotal = 0; // Não há fluxo inicialmente
 
     // Aumenta o fluxo enquanto houver um caminho da origem para o sumidouro
-    while (bfs(rGraph, s, t, parent)) {
+    while (bfs(grafoRes, s, t, pai)) {
         // Encontra a capacidade residual mínima do caminho aumentante preenchido pela BFS
-        int path_flow = INT_MAX;
-        for (v = t; v != s; v = parent[v]) {
-            u = parent[v];
-            path_flow = min(path_flow, rGraph[u][v]);
+        int fluxo = INT_MAX;
+        for (v = t; v != s; v = pai[v]) {
+            u = pai[v];
+            fluxo = min(fluxo, grafoRes[u][v]);
         }
 
         // Atualiza as capacidades residuais dos arestas e os reversos ao longo do caminho
-        for (v = t; v != s; v = parent[v]) {
-            u = parent[v];
-            rGraph[u][v] -= path_flow;
-            rGraph[v][u] += path_flow;
+        for (v = t; v != s; v = pai[v]) {
+            u = pai[v];
+            grafoRes[u][v] -= fluxo;
+            grafoRes[v][u] += fluxo;
         }
 
         // Adiciona o fluxo do caminho ao fluxo total
-        max_flow += path_flow;
+        fTotal += fluxo;
     }
 
     // Retorna o fluxo total
-    return max_flow;
+    return fTotal;
 }
 
 // Exemplo de uso do algoritmo
 int main() {
     // Grafo de exemplo
-    int graph[V][V] = {
+    int grafo[V][V] = {
         {0, 16, 13, 0, 0, 0},
         {0, 0, 10, 12, 0, 0},
         {0, 4, 0, 0, 14, 0},
@@ -98,7 +96,7 @@ int main() {
     };
 
     // Fonte é o vértice 0 e sumidouro é o vértice 5
-    cout << "O fluxo máximo é: " << fordFulkerson(graph, 0, 5) << endl;
+    cout << "O fluxo máximo é: " << fordFulkerson(grafo, 0, 5) << endl;
 
     return 0;
 }
